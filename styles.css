@@ -1,4 +1,4 @@
- *{
+*{
     padding: 0;
     margin: 0;
     box-sizing: border-box;
@@ -9,6 +9,16 @@ body {
     background: linear-gradient(45deg, rgb(45, 45, 248) 10%, rgba(90, 149, 255, 0.3));
     background-size: cover;
     margin: 0;
+}
+
+video{
+    top: 0;
+    left: 0;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1;
 }
   
 .app {
@@ -23,6 +33,7 @@ body {
   
 .container {
     padding: 2em 2.5em;
+    margin-bottom: 2.5em;
     background-color: #e2e5ec;
     box-shadow: 0 1em 2em rgba(0, 0, 0, 0.4);
     border-radius: 0.8em;
