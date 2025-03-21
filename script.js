@@ -24,39 +24,77 @@ const updateProgressBar = () => {
 };
 
 const attachTaskEvents = () => {
-  // Tombol Hapus
-  const deleteButtons = document.querySelectorAll(".delete");
-  deleteButtons.forEach((button) => {
-    button.onclick = () => {
-      const taskElement = button.parentNode;
-      const checkBox = taskElement.querySelector(".task-check");
-
-      // Kurangi taskCount jika checkbox belum dicentang
-      if (!checkBox.checked) {
-        taskCount -= 1;
-      }
-
-      taskElement.remove();
-      displayCount(taskCount);
-      updateProgressBar();
-    };
-  });
 
   // Tombol Edit
   const editButtons = document.querySelectorAll(".edit");
   editButtons.forEach((editBtn) => {
-    editBtn.onclick = (e) => {
-      let targetElement = e.target;
-      if (targetElement.className !== "edit") {
-        targetElement = targetElement.parentElement;
+    editBtn.addEventListener("click", (e) => {
+      const taskElement = editBtn.parentNode;
+      const taskNameSpan = taskElement.querySelector(".taskName");
+      // Ambil ikon dari tombol edit dan delete
+      const editIcon = editBtn.querySelector("i");
+      const deleteIcon = taskElement.querySelector(".delete i");
+
+      // Jika belum dalam mode edit, mulai proses edit
+      if (!taskNameSpan.isContentEditable) {
+        taskNameSpan.setAttribute("data-original", taskNameSpan.innerText);
+        taskNameSpan.contentEditable = "true";
+        taskNameSpan.focus();
+
+        // Ubah ikon tombol edit dan delete
+        editIcon.classList.remove("fa-pen-to-square");
+        editIcon.classList.add("fa-check");
+        deleteIcon.classList.remove("fa-trash");
+        deleteIcon.classList.add("fa-xmark");
+      } else {
+        // Jika sudah dalam mode edit, selesaikan proses edit dan simpan perubahan
+        taskNameSpan.contentEditable = "false";
+
+        // Kembalikan ikon ke kondisi awal
+        editIcon.classList.remove("fa-check");
+        editIcon.classList.add("fa-pen-to-square");
+        deleteIcon.classList.remove("fa-xmark");
+        deleteIcon.classList.add("fa-trash");
       }
-      newTaskInput.value = targetElement.previousElementSibling.innerText;
-      targetElement.parentNode.remove();
-      taskCount-=1;
-      displayCount(taskCount);
-      updateProgressBar();
-    };
+    });
   });
+
+  // Tombol Delete
+  const deleteButtons = document.querySelectorAll(".delete");
+  deleteButtons.forEach((deleteBtn) => {
+    deleteBtn.addEventListener("click", (e) => {
+      const taskElement = deleteBtn.parentNode;
+      const taskNameSpan = taskElement.querySelector(".taskName");
+      // Ambil ikon dari tombol delete dan edit
+      const deleteIcon = deleteBtn.querySelector("i");
+      const editIcon = taskElement.querySelector(".edit i");
+
+      // Jika task sedang dalam mode edit, batalkan proses edit
+      if (taskNameSpan.isContentEditable) {
+        // Kembalikan teks asli
+        const originalText = taskNameSpan.getAttribute("data-original");
+        taskNameSpan.innerText = originalText;
+        taskNameSpan.contentEditable = "false";
+
+        // Kembalikan ikon ke kondisi awal
+        editIcon.classList.remove("fa-check");
+        editIcon.classList.add("fa-pen-to-square");
+        deleteIcon.classList.remove("fa-xmark");
+        deleteIcon.classList.add("fa-trash");
+      } else {
+        // Jika tidak dalam mode edit, jalankan fungsi hapus task seperti semula
+        const checkBox = taskElement.querySelector(".task-check");
+        taskElement.remove();
+        // Jika checkbox belum tercentang, maka kurangi taskCount
+        if (!checkBox.checked) {
+          taskCount -= 1;
+        }
+        displayCount(taskCount);
+        updateProgressBar();
+      }
+    });
+  });
+
 
   // Checkbox untuk tugas
   const taskChecks = document.querySelectorAll(".task-check");
@@ -107,6 +145,42 @@ const addTask = () => {
 };
 
 addBtn.addEventListener("click", addTask);
+
+// Fungsi untuk membatalkan sesi edit pada sebuah task
+const cancelEditing = (taskElement) => {
+const taskNameSpan = taskElement.querySelector(".taskName");
+  if (taskNameSpan.isContentEditable) {
+    const originalText = taskNameSpan.getAttribute("data-original");
+    if (originalText !== null) {
+      taskNameSpan.innerText = originalText;
+    }
+    taskNameSpan.contentEditable = "false";
+
+    // Kembalikan ikon ke keadaan semula
+    const editIcon = taskElement.querySelector(".edit i");
+    const deleteIcon = taskElement.querySelector(".delete i");
+    editIcon.className = "fa-solid fa-pen-to-square";
+    deleteIcon.className = "fa-solid fa-trash";
+  }
+};
+
+// Listener pada dokumen untuk mendeteksi klik di luar container task
+document.addEventListener("click", (event) => {
+  // Jika target adalah checkbox di dalam sebuah task, batalkan sesi edit pada task tersebut
+  if (event.target.matches(".task-check")) {
+    const taskElement = event.target.closest(".task");
+    if (taskElement) {
+      cancelEditing(taskElement);
+    }
+  } else {
+    // Jika klik terjadi di luar area task yang sedang dalam mode edit
+    document.querySelectorAll(".task").forEach((taskElement) => {
+      if (!taskElement.contains(event.target)) {
+        cancelEditing(taskElement);
+      }
+    });
+  }
+});
 
 window.onload = () => {
   taskCount = 0;
